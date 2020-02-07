@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>深圳社区疫情统计图</title>
+		<link rel="stylesheet" href="/arcgis_js_api/library/4.14/esri/themes/light/main.css">
+		<link rel="stylesheet" href="./css/main.css">
+	</head>
+	<body>
+		<div id="mapRoot"></div>
+		<div class="sys-title-label">深圳市各区疫情分布情况一览</div>
+		<div class="layer-control-box">
+			<div>
+				<input id="showRadio" name="layerType" type="radio" checked="checked"/>
+				<label for="showRadio">完全显示专题图</label>
+			</div>
+			<div>
+				<input id="showRadio2" name="layerType" type="radio" />
+				<label for="showRadio2">半透明显示专题图</label>
+			</div>
+			<div>
+				<input id="hideRadio" name="layerType" type="radio" />
+				<label for="hideRadio">隐藏专题图</label>
+			</div>
+		</div>
+		<div id="legendBox" class="lengnd-box"></div>
+		<div id="chartRoot">
+			
+		</div>
+	</body>
+	<script type="text/javascript">
+		// 设置arcgis api存放的ip，这里是配合本地化修改设置的。
+		// 具体修改点可以查看api部署包中"arcgis_js_api\library\4.14\init.js"和"arcgis_js_api\library\4.14\dojo\dojo.js"两个文件
+		// 搜索关键词"window.arcgisApiIp"即可找到修改的位置
+		window.arcgisApiIp = window.location.host;
+	</script>
+	
+	<script type="text/javascript" src="./lib/echarts.min.js"></script>
+	<script type="text/javascript" src="./lib/chroma.min.js"></script>
+	<script type="text/javascript" src="/arcgis_js_api/library/4.14/init.js"></script>
+	<script type="text/javascript" src="./js/main.js"></script>
+</html>

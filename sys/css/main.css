@@ -1,0 +1,93 @@
+html, body{
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	outline: none;
+	border: none;
+}
+
+#mapRoot{
+	position: absolute;
+	box-sizing: border-box;
+	left: 0;
+	right: 20%;
+	top: 0;
+	bottom: 0;
+	margin: 0;
+	padding: 0;
+	border-right:1px solid rgba(0,0,0,0.5);
+}
+
+.esri-view .esri-view-surface--inset-outline:focus::after{
+	outline: none !important;
+}
+
+
+#chartRoot{
+	position: absolute;
+	box-sizing: border-box;
+	left: 80%;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	margin: 0;
+	padding: 0;
+	outline: none;
+	border: none;
+	background-color: #00192e;
+}
+
+.sys-title-label{
+	position: absolute;
+    /*left: 40%;
+    top: 40px;*/
+    left: 75px;
+    top: 20px;
+    font-size: 38px;
+    font-weight: bold;
+    font-family: sans-serif;
+    letter-spacing: 3px;
+    width: 533px;
+    /*margin-left: -240px;*/
+    color: #fff;
+}
+
+.lengnd-box{
+	position: absolute;
+    box-sizing: border-box;
+    bottom: 30px;
+    left: 30px;
+    border: 1px solid rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    /*background-color: #ffffff;*/
+    background-color: rgba(110,110,110,0.3);
+    color: #fff;
+}
+.lengnd-box div{
+	margin: 5 0;
+}
+.lengnd-box span{
+	display: inline-block;
+	vertical-align: middle;
+}
+.legend-color-block{
+	width: 25px;
+    height: 15px;
+    margin-right: 5px;
+}
+
+.layer-control-box{
+	position: absolute;
+    box-sizing: border-box;
+    background-color: rgba(110,110,110,0.3);
+    color: #fff;
+    top: 110px;
+    left: 13px;
+    border: 1px solid rgba(0,0,0,0.5);
+    padding: 5px 10px;
+}
+
+.layer-control-box div, .layer-control-box label, .layer-control-box input{
+	cursor: pointer;
+}
