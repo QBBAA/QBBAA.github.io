@@ -1,3 +1,23 @@
+// 判断移动端
+function IsPC(){  
+    var userAgentInfo = navigator.userAgent;
+    var Agents = new Array("Android", "iPhone", "SymbianOS", "Windows Phone", "iPad", "iPod");  
+    var flag = true;  
+    for (var v = 0; v < Agents.length; v++) {  
+        if (userAgentInfo.indexOf(Agents[v]) > 0) { flag = false; break; }  
+    }  
+    return flag;  
+}
+const isPc = IsPC();
+if(!isPc){
+    $(".sys-title-label").addClass("mobile-set");
+    $("#mapRoot").addClass("mobile-set");
+    $("#chartRoot").addClass("mobile-set");
+    $(".lengnd-box").addClass("mobile-set");
+    $(".layer-control-box").addClass("mobile-set");
+    $("#controlLabel").css("display", "none");
+}
+
 require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer"],
 function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer) {
     // esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
@@ -52,17 +72,22 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         spatialReference: {
             wkid: 3857
         },
-        popup: {
-            container: document.querySelector("#popDiv")
-        }
+        // popup: {
+        //     container: document.querySelector("#popDiv")
+        // }
     });
 
-    view.on("pointer-move", pickAreaOnMap);
+    if(isPc){
+        view.on("pointer-move", pickAreaOnMap);
+    } else {
+        view.on("click", pickAreaOnMap);
+    }
+    
 
     
 
     function pickAreaOnMap(event){
-        view.hitTest(event).then(res => {
+        view.hitTest(event).then(function(res) {
             if(res.results.length == 0){
                 view.popup.close();
             } else {
@@ -73,25 +98,21 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                         // debugger
                         let date = new Date(result.graphic.attributes["日期"]);
                         view.popup.open({
-                            content: `
-                                <div>
-                                    <div>小区名称：${result.graphic.attributes["小区名称"]}</div>
-                                    <div>小区地址：${result.graphic.attributes["地址"]}</div>
-                                    <div>所属区域：${result.graphic.attributes["行政区"]}</div>
-                                    <div>首次发现病例日期：${date.getFullYear()}年${(date.getMonth() + 1)}月${date.getDate()}日</div>
-                                </div>
-                            `,
+                            content: '<div><div>小区名称：' + result.graphic.attributes["小区名称"] + '</div>' + 
+                                    '<div>小区地址：' + result.graphic.attributes["地址"] + '</div>' + 
+                                    '<div>所属区域：' + result.graphic.attributes["行政区"] + '</div>' + 
+                                    '<div>首次发现病例日期：' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日</div></div>',
                             location: result.mapPoint,
                         });
                         break;
                     } else if(geo.type == "polygon"){
                         if(layerFlag == true){
                             let areaName = result.graphic.attributes["Name_CHN"];
-                            let targetDataItem = responseJsonData.find(dataItem => {
+                            let targetDataItem = responseJsonData.find(function(dataItem) {
                                 return dataItem.name == areaName;
                             });
                             view.popup.open({
-                                content: `<div>${areaName}：${targetDataItem.value}例</div>`,
+                                content: '<div>' + areaName + '：' + targetDataItem.value + '例</div>',
                                 location: result.mapPoint,
                             });
                         } else {
@@ -106,7 +127,8 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
 
     function highLightGra(name){
         let target = null;
-        for(let gra of thematicLayer.graphic){
+        for(let i in thematicLayer.graphic){
+            let gra = thematicLayer.graphic[i];
             if(gra.attributes["Name_CHN"] == name){
                 target = new Graphic({
                     attributes: gra.attributes,
@@ -163,7 +185,8 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
     function getColor(value) {
         let color = "#7c7c7c";
 
-        for(let colorObj of colorRes){
+        for(let i in colorRes){
+            let colorObj = colorRes[i];
             if(value >= colorObj.stop){
                 color = colorObj.color;
                 break;
@@ -177,7 +200,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         let responseData = await fetch("./json/data.json");
         responseJsonData = await responseData.json();
         responseJsonData = responseJsonData.data;
-        responseJsonData = responseJsonData.sort((a, b) => {
+        responseJsonData = responseJsonData.sort(function(a, b) {
             return a.value - b.value;
         });
 
@@ -234,14 +257,83 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
 
         let listDom = document.querySelector("#chartRoot");
         myChart = echarts.init(listDom);
+
+        let yAxisObj;
+        let xAxisObj;
+        let gridObj;
+        let titleTextStyleObj;
+
+        if(isPc){
+            titleTextStyleObj = {
+                color: "#fff",
+            };
+            yAxisObj = {
+                type: 'category',
+                data: yAxisData,
+                axisLine: {
+                    lineStyle: {
+                        color: "#fff"
+                    }
+                }
+            };
+            xAxisObj = {
+                type: 'value',
+                axisLine: {
+                    lineStyle: {
+                        color: "#fff"
+                    }
+                }
+            };
+            gridObj ={
+                top: 50,
+                left: 60,
+                right: 30,
+                bottom: 30
+            };
+        } else {
+            titleTextStyleObj = {
+                color: "#fff",
+                fontSize: 17
+            };
+            yAxisObj = {
+                type: 'value',
+                axisLine: {
+                    lineStyle: {
+                        color: "#fff"
+                    }
+                }
+            };
+            xAxisObj = {
+                type: 'category',
+                data: yAxisData,
+                axisLine: {
+                    lineStyle: {
+                        color: "#fff"
+                    }
+                },
+                axisLabel: {
+                    interval: 0,
+                    formatter: function(labelName){
+                        labelName = labelName.split("").join("\n");
+                        return labelName;
+                    }
+                }
+            };
+            gridObj ={
+                top: 50,
+                left: 30,
+                right: 5,
+                bottom: 60
+            };
+        }
+        
+
         let option = {
             title: {
                 text: "深圳市各区疫情统计图",
                 left: "center",
                 top: 15,
-                textStyle: {
-                    color: "#fff"
-                }
+                textStyle: titleTextStyleObj
             },
             legend: {
                 show: false,
@@ -256,42 +348,21 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                     return params.marker + " " + params.name + "确诊数量：" + params.value + "例"
                 }
             },
-            grid: {
-                // top: 120,
-                top: 50,
-                left: 60,
-                right: 30,
-                bottom: 30
-            },
-            yAxis: {
-                type: 'category',
-                data: yAxisData,
-                axisLine: {
-                    lineStyle: {
-                        color: "#fff"
-                    }
-                }
-            },
-            xAxis: {
-                type: 'value',
-                axisLine: {
-                    lineStyle: {
-                        color: "#fff"
-                    }
-                }
-            },
+            grid: gridObj,
+            yAxis: yAxisObj,
+            xAxis: xAxisObj,
             series: seriesData
         };
         myChart.setOption(option, true);
 
         let areaData = await fetch("./json/area_shenzhen.json");
         let areaJsonData = await areaData.json();
-        let areaGras = areaJsonData.features.map(dataItem => {
+        let areaGras = areaJsonData.features.map(function(dataItem) {
             let gra = Graphic.fromJSON(dataItem);
             gra.geometry.spatialReference = {wkid: 3857};
             return gra;
         })
-        let fields = areaJsonData.fields.map(fieldObj => {
+        let fields = areaJsonData.fields.map(function(fieldObj) {
             if(dictionary.hasOwnProperty(fieldObj.type)){
                 return {
                     name: fieldObj.name,
@@ -342,7 +413,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         areaPointJsonData = areaPointJsonData.features;
         const areaPointLayer = new GraphicsLayer();
         map.add(areaPointLayer);
-        areaPointLayer.addMany(areaPointJsonData.map(dataItem => {
+        areaPointLayer.addMany(areaPointJsonData.map(function(dataItem) {
             let gra = Graphic.fromJSON(dataItem);
             gra.geometry.spatialReference = {wkid: 3857};
             gra.symbol = {
@@ -369,24 +440,24 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
 
     let legendHtml = "";
     for(let colorObj of colorRes){
-        legendHtml += `<div><span class="legend-color-block" style="background-color: ${colorObj.color}"></span><span>确诊数量大于等于 ${colorObj.stop}</span></div>`;
+        legendHtml += '<div><span class="legend-color-block" style="background-color: ' + colorObj.color + '"></span><span>确诊数≥' + colorObj.stop + '</span></div>';
     }
     let legendBoxDom = document.querySelector("#legendBox");
     legendBoxDom.innerHTML = legendHtml;
 
-    document.querySelector("#showRadio").addEventListener("change", event => {
+    document.querySelector("#showRadio").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(1);
             layerFlag = true;
         }
     });
-    document.querySelector("#showRadio2").addEventListener("change", event => {
+    document.querySelector("#showRadio2").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(0.5);
             layerFlag = true;
         }
     });
-    document.querySelector("#hideRadio").addEventListener("change", event => {
+    document.querySelector("#hideRadio").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(0);
             layerFlag = false;

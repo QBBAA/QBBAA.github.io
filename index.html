@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
 		<title>深圳社区疫情统计图</title>
 		<!-- <link rel="stylesheet" href="/arcgis_js_api/library/4.14/esri/themes/light/main.css"> -->
 		<link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/css/main.css">
@@ -9,10 +10,9 @@
 	</head>
 	<body>
 		<div id="mapRoot"></div>
-		<div id="popDiv"></div>
 		<div class="sys-title-label">深圳市各区疫情分布情况一览</div>
 		<div class="layer-control-box">
-			<div style="text-indent: 5px;">各区病例总计显示情况</div>
+			<div id="controlLabel">各区病例总计显示情况</div>
 			<div>
 				<input id="showRadio" name="layerType" type="radio" checked="checked"/>
 				<label for="showRadio">完全显示</label>
@@ -38,6 +38,7 @@
 		window.arcgisApiIp = window.location.host;
 	</script>
 	
+	<script type="text/javascript" src="./lib/jquery-3.4.1.min.js"></script>
 	<script type="text/javascript" src="./lib/echarts.min.js"></script>
 	<!-- <script type="text/javascript" src="./lib/chroma.min.js"></script> -->
 	<!-- <script type="text/javascript" src="/arcgis_js_api/library/4.14/init.js"></script> -->
