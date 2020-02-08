@@ -77,13 +77,12 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         // }
     });
 
-    if(isPc){
-        view.on("pointer-move", pickAreaOnMap);
-    } else {
-        view.on("click", pickAreaOnMap);
-    }
-    
-
+    // if(isPc){
+    //     view.on("pointer-move", pickAreaOnMap);
+    // } else {
+    //     view.on("click", pickAreaOnMap);
+    // }
+    view.on("pointer-move", pickAreaOnMap);
     
 
     function pickAreaOnMap(event){
