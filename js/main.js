@@ -29,6 +29,7 @@ require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/
     "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer", "esri/widgets/TimeSlider"],
 function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer, TimeSlider) {
     // esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
+    const wkid = 3857;
 
     let thematicLayer = null;
     let highLightLayer = null;
@@ -70,24 +71,48 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
     map.add(baseLayer);
 
     // 创建地图容器并设置地图对象和初始化中心点、等级
-    const view = new MapView({
-        container: "mapRoot",
-        map: map,
-        extent: {
+    let initExtent;
+    if(isPc){
+        initExtent = {
             xmin: 12647270.700061997,
             ymin: 2546232.0677209855,
             xmax: 12764601.538479583,
             ymax: 2620299.548129222,
-            spatialReference: {wkid: 3857}
-        },
+        };
+    } else {
+        initExtent = {
+            xmin: 12643257.756076977,
+            ymin: 2518447.2079393067,
+            xmax: 12757607.550391544,
+            ymax: 2661231.576775947,
+        };
+    }
+    initExtent.spatialReference = {wkid: wkid}
+    
+    const view = new MapView({
+        container: "mapRoot",
+        map: map,
+        extent: initExtent,
         spatialReference: {
-            wkid: 3857
+            wkid: wkid
         },
-        // popup: {
-        //     container: document.querySelector("#popDiv")
-        // }
+        popup: {
+            // container: document.querySelector("#popDiv")
+            autoOpenEnabled: false
+        }
     });
-    view.on("pointer-move", pickAreaOnMap);
+    // view.on("pointer-move", pickAreaOnMap_2);
+    // view.on("click", pickAreaOnMap);
+
+    if(isPc){
+        view.on("pointer-move", pickAreaOnMap_2);
+    } else {
+        view.on("click", pickAreaOnMap);
+    }
+
+    // view.watch("extent", newValue => {
+    //     console.log(newValue);
+    // });
 
     timeSlider = new TimeSlider({
         container: "timeSliderDiv",
@@ -118,15 +143,49 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
     $("#timeSliderDiv").css("display", "none");
     timeSlider.watch("timeExtent", changeAreaPoint);
 
-    // if(isPc){
-    //     view.on("pointer-move", pickAreaOnMap);
-    // } else {
-    //     view.on("click", pickAreaOnMap);
-    // }
-    
-    
-
     function pickAreaOnMap(event){
+        view.hitTest(event).then(function(res) {
+            if(res.results.length == 0){
+                view.popup.close();
+            } else {
+                for(let i = 0; i < res.results.length; i++){
+                    let result = res.results[i];
+                    let geo = result.graphic.geometry;
+                    if(geo.type == "point"){
+                        if(layerFlag_2 == true){
+                            let date = new Date(result.graphic.attributes["日期"]);
+                            view.popup.open({
+                                content: '<div><div>小区名称：' + result.graphic.attributes["小区名称"] + '</div>' + 
+                                        '<div>小区地址：' + result.graphic.attributes["地址"] + '</div>' + 
+                                        '<div>所属区域：' + result.graphic.attributes["行政区"] + '</div>' + 
+                                        '<div>首次发现病例日期：' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日</div></div>',
+                                location: event.mapPoint,
+                            });
+                            break;
+                        } else {
+                            view.popup.close();
+                        }
+                    } else if(geo.type == "polygon"){
+                        if(layerFlag_1 == true){
+                            let areaName = result.graphic.attributes["Name_CHN"];
+                            let targetDataItem = responseJsonData.find(function(dataItem) {
+                                return dataItem.name == areaName;
+                            });
+                            view.popup.open({
+                                content: '<div>' + areaName + '：' + targetDataItem.value + '例</div>',
+                                location: event.mapPoint,
+                            });
+                            break;
+                        } else {
+                            view.popup.close();
+                        }
+                    }
+                }
+            }
+        });
+    };  
+
+    function pickAreaOnMap_2(event){
         view.hitTest(event).then(function(res) {
             if(res.results.length == 0){
                 view.popup.close();
@@ -158,6 +217,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                                 content: '<div>' + areaName + '：' + targetDataItem.value + '例</div>',
                                 location: result.mapPoint,
                             });
+                    
                             break;
                         } else {
                             view.popup.close();
@@ -415,7 +475,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         let areaJsonData = await areaData.json();
         let areaGras = areaJsonData.features.map(function(dataItem) {
             let gra = Graphic.fromJSON(dataItem);
-            gra.geometry.spatialReference = {wkid: 3857};
+            gra.geometry.spatialReference = {wkid: wkid};
             return gra;
         })
         let fields = areaJsonData.fields.map(function(fieldObj) {
@@ -439,7 +499,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
             objectIdField: "FID",
             outFields: ["*"],
             fields: fields,
-            spatialReference: {wkid: 3857},
+            spatialReference: {wkid: wkid},
             source: areaGras,
             renderer: {
                 type: "unique-value",  // autocasts as new UniqueValueRenderer()
@@ -470,7 +530,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         areaPointLayer = new GraphicsLayer();
         areaPointLayer.addMany(areaPointJsonData.map(function(dataItem) {
             let gra = Graphic.fromJSON(dataItem);
-            gra.geometry.spatialReference = {wkid: 3857};
+            gra.geometry.spatialReference = {wkid: wkid};
             gra.symbol = {
                 type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
                 style: "circle",

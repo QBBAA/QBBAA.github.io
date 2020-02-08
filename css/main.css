@@ -181,9 +181,10 @@ html, body{
     padding: 2px 5px;
 }
 .layer-control-box.mobile-set{
-	right: 8px;
-    left: auto;
-    top: 48px;
+	right: auto;
+    left: 5px;
+    top: 143px;
+    padding: 2px 5px;
 }
 .lastdata-title-box.mobile-set{
 	font-size: 12px;
@@ -193,11 +194,15 @@ html, body{
     padding: 5px 0px 0 5px;
 }
 #timeSliderDiv.mobile-set{
-	width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+	width: 250px;
+    min-width: auto;
     right: 5px;
     left: auto;
     bottom: 4.5%;
     font-size: 12px;
+}
+
+.mobile-set .esri-popup__main-container{
+	text-align: right;
+    left: auto !important;
 }
