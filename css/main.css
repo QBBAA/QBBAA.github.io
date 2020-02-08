@@ -91,6 +91,13 @@ html, body{
 .layer-control-box div, .layer-control-box label, .layer-control-box input{
 	cursor: pointer;
 }
+.layer-control-box label, .layer-control-box input{
+	display: inline-block;
+	vertical-align: middle;
+}
+.layer-control-box label{
+	font-size: 13px;
+}
 
 #popDiv .esri-popup__main-container{
 	width: auto !important;

@@ -71,26 +71,32 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                     let geo = result.graphic.geometry;
                     if(geo.type == "point"){
                         // debugger
+                        let date = new Date(result.graphic.attributes["日期"]);
                         view.popup.open({
                             content: `
                                 <div>
                                     <div>小区名称：${result.graphic.attributes["小区名称"]}</div>
                                     <div>小区地址：${result.graphic.attributes["地址"]}</div>
                                     <div>所属区域：${result.graphic.attributes["行政区"]}</div>
+                                    <div>首次发现病例日期：${date.getFullYear()}年${(date.getMonth() + 1)}月${date.getDate()}日</div>
                                 </div>
                             `,
                             location: result.mapPoint,
                         });
                         break;
-                    } else if(geo.type == "polygon" && layerFlag == true){
-                        let areaName = result.graphic.attributes["Name_CHN"];
-                        let targetDataItem = responseJsonData.find(dataItem => {
-                            return dataItem.name == areaName;
-                        });
-                        view.popup.open({
-                            content: `<div>${areaName}：${targetDataItem.value}例</div>`,
-                            location: result.mapPoint,
-                        });
+                    } else if(geo.type == "polygon"){
+                        if(layerFlag == true){
+                            let areaName = result.graphic.attributes["Name_CHN"];
+                            let targetDataItem = responseJsonData.find(dataItem => {
+                                return dataItem.name == areaName;
+                            });
+                            view.popup.open({
+                                content: `<div>${areaName}：${targetDataItem.value}例</div>`,
+                                location: result.mapPoint,
+                            });
+                        } else {
+                            view.popup.close();
+                        }
                         break;
                     }
                 }
@@ -238,11 +244,12 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                 }
             },
             legend: {
-                data: legendData,
-                top: 50,
-                textStyle: {
-                    color: "#fff"
-                }
+                show: false,
+                // data: legendData,
+                // top: 50,
+                // textStyle: {
+                //     color: "#fff"
+                // }
             },
             tooltip: {
                 formatter: function(params, ticket, callback){
@@ -250,7 +257,8 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                 }
             },
             grid: {
-                top: 120,
+                // top: 120,
+                top: 50,
                 left: 60,
                 right: 30,
                 bottom: 30
