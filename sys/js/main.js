@@ -27,6 +27,9 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
             xmax: 12764601.538479583,
             ymax: 2620299.548129222,
             spatialReference: {wkid: 3857}
+        },
+        spatialReference: {
+            wkid: 3857
         }
     });
 
@@ -179,6 +182,47 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
         thematicLayer = new GraphicsLayer();
         thematicLayer.add();
         map.add(thematicLayer);
+
+        // const areaPointLayer = new GeoJSONLayer({
+        //     url: "./geojson/小区点数据.json",
+        //     renderer: {
+        //         type: "simple",  // autocasts as new SimpleRenderer()
+        //         symbol: {
+        //             type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+        //               style: "square",
+        //               color: "blue",
+        //               size: "8px",  // pixels
+        //               outline: {  // autocasts as new SimpleLineSymbol()
+        //                 color: [ 255, 255, 0 ],
+        //                 width: 3  // points
+        //               }
+        //         }
+        //     },
+        //     spatialReference: {wkid: 3857}
+        // });
+        // map.add(areaPointLayer);
+
+        // 获取小区点数据
+        let areaPointData = await fetch("./json/小区点数据.json");
+        let areaPointJsonData = await areaPointData.json();
+        areaPointJsonData = responseJsonData.data;
+        const areaPointLayer = new GraphicsLayer();
+        map.add(areaPointLayer);
+        areaPointLayer.addMany(areaPointJsonData.map(dataItem => {
+            let gra = Graphic.fromJSON(dataItem);
+            gra.symbol = {
+                type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                style: "square",
+                color: "blue",
+                size: "8px",  // pixels
+                outline: {  // autocasts as new SimpleLineSymbol()
+                    color: [ 255, 255, 0 ],
+                    width: 3  // points
+                }
+            };
+            return gra;
+        }));
+        
     };
 
     // let addLabel = async () => {
