@@ -10,24 +10,35 @@ function IsPC(){
 }
 const isPc = IsPC();
 if(!isPc){
-    $(".sys-title-label").addClass("mobile-set");
-    $("#mapRoot").addClass("mobile-set");
-    $("#chartRoot").addClass("mobile-set");
-    $(".lengnd-box").addClass("mobile-set");
-    $(".layer-control-box").addClass("mobile-set");
-    $("#controlLabel").css("display", "none");
+    let s = [
+        ".sys-title-label",
+        "#mapRoot",
+        "#chartRoot",
+        ".lengnd-box",
+        ".layer-control-box",
+        ".lastdata-title-box",
+        "#timeSliderDiv",
+    ];
+    for(let key of s){
+        $(key).addClass("mobile-set");
+    }
+    $(".control-label").css("display", "none");
 }
 
-require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer"],
-function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer) {
+require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/layers/GeoJSONLayer", 
+    "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer", "esri/widgets/TimeSlider"],
+function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer, TimeSlider) {
     // esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
 
     let thematicLayer = null;
     let highLightLayer = null;
+    let areaPointLayer = null;
     let lastGra = null;
     let myChart = null;
     let responseJsonData = null;
-    let layerFlag = true;
+    let layerFlag_1 = true;
+    let layerFlag_2 = false;
+    let timeSlider = null;
 
     const colorRes = [
         {stop: 90, color: "#c11111"},
@@ -76,13 +87,43 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         //     container: document.querySelector("#popDiv")
         // }
     });
+    view.on("pointer-move", pickAreaOnMap);
+
+    timeSlider = new TimeSlider({
+        container: "timeSliderDiv",
+        view: view,
+        // show data within a given time range
+        // in this case data within one year
+        // mode: "time-window",
+        mode: "cumulative-from-start",
+        fullTimeExtent: { // entire extent of the timeSlider
+            start: new Date(2020, 0, 1),
+            end: new Date()
+        },
+        values:[ // location of timeSlider thumbs
+            new Date()
+        ],
+        stops: {
+            interval: {
+                value: 1,
+                unit: "days"
+            },
+            // timeExtent: {
+            //     start: new Date(2001, 0, 1),
+            //     end: new Date(2010, 0, 1)
+            // }
+        }
+    });
+    view.ui.add(timeSlider, "manual");
+    $("#timeSliderDiv").css("display", "none");
+    timeSlider.watch("timeExtent", changeAreaPoint);
 
     // if(isPc){
     //     view.on("pointer-move", pickAreaOnMap);
     // } else {
     //     view.on("click", pickAreaOnMap);
     // }
-    view.on("pointer-move", pickAreaOnMap);
+    
     
 
     function pickAreaOnMap(event){
@@ -94,18 +135,21 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                     let result = res.results[i];
                     let geo = result.graphic.geometry;
                     if(geo.type == "point"){
-                        // debugger
-                        let date = new Date(result.graphic.attributes["日期"]);
-                        view.popup.open({
-                            content: '<div><div>小区名称：' + result.graphic.attributes["小区名称"] + '</div>' + 
-                                    '<div>小区地址：' + result.graphic.attributes["地址"] + '</div>' + 
-                                    '<div>所属区域：' + result.graphic.attributes["行政区"] + '</div>' + 
-                                    '<div>首次发现病例日期：' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日</div></div>',
-                            location: result.mapPoint,
-                        });
-                        break;
+                        if(layerFlag_2 == true){
+                            let date = new Date(result.graphic.attributes["日期"]);
+                            view.popup.open({
+                                content: '<div><div>小区名称：' + result.graphic.attributes["小区名称"] + '</div>' + 
+                                        '<div>小区地址：' + result.graphic.attributes["地址"] + '</div>' + 
+                                        '<div>所属区域：' + result.graphic.attributes["行政区"] + '</div>' + 
+                                        '<div>首次发现病例日期：' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日</div></div>',
+                                location: result.mapPoint,
+                            });
+                            break;
+                        } else {
+                            view.popup.close();
+                        }
                     } else if(geo.type == "polygon"){
-                        if(layerFlag == true){
+                        if(layerFlag_1 == true){
                             let areaName = result.graphic.attributes["Name_CHN"];
                             let targetDataItem = responseJsonData.find(function(dataItem) {
                                 return dataItem.name == areaName;
@@ -114,15 +158,28 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                                 content: '<div>' + areaName + '：' + targetDataItem.value + '例</div>',
                                 location: result.mapPoint,
                             });
+                            break;
                         } else {
                             view.popup.close();
                         }
-                        break;
                     }
                 }
             }
         });
     };  
+
+    function changeAreaPoint(event){
+        if(areaPointLayer){
+            let compareDate = event.end.getTime();
+            areaPointLayer.graphics.forEach(function(gra, i){
+                if(gra.attributes["日期"] <= compareDate){
+                    gra.visible = true;
+                } else {
+                    gra.visible = false;
+                }
+            });
+        }
+    }
 
     function highLightGra(name){
         let target = null;
@@ -389,17 +446,17 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                 field: "Code",
                 uniqueValueInfos
             },
-            labelingInfo: [
-                {
-                    labelExpressionInfo: { expression: "$feature.Name_CHN" },
-                    symbol: {
-                        type: "text",  // autocasts as new TextSymbol()
-                        color: "black",
-                        haloSize: 1,
-                        haloColor: "white"
-                    }
-                }
-            ]
+            // labelingInfo: [
+            //     {
+            //         labelExpressionInfo: { expression: "$feature.Name_CHN" },
+            //         symbol: {
+            //             type: "text",  // autocasts as new TextSymbol()
+            //             color: "black",
+            //             haloSize: 1,
+            //             haloColor: "white"
+            //         }
+            //     }
+            // ]
         });
         map.add(thematicLayer);
 
@@ -410,8 +467,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         let areaPointData = await fetch("./json/village.json");
         let areaPointJsonData = await areaPointData.json();
         areaPointJsonData = areaPointJsonData.features;
-        const areaPointLayer = new GraphicsLayer();
-        map.add(areaPointLayer);
+        areaPointLayer = new GraphicsLayer();
         areaPointLayer.addMany(areaPointJsonData.map(function(dataItem) {
             let gra = Graphic.fromJSON(dataItem);
             gra.geometry.spatialReference = {wkid: 3857};
@@ -419,14 +475,16 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                 type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
                 style: "circle",
                 color: "blue",
-                size: "15px",  // pixels
+                size: "10px",  // pixels
                 outline: {  // autocasts as new SimpleLineSymbol()
                     color: [ 255, 255, 0 ],
                     width: 2  // points
                 }
             };
             return gra;
-        }));        
+        }));    
+        map.add(areaPointLayer);
+        areaPointLayer.opacity = 0;
     };
 
     function setThematicLayer(opacity) {
@@ -434,8 +492,26 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
             thematicLayer.opacity = opacity;
         }
     }
+    function setAreaPointLayer(opacity) {
+        if(areaPointLayer){
+            areaPointLayer.opacity = opacity;
+        }
+    }
+
+    async function setTotalLabel(){
+        let totalData = await fetch("./json/lastdata.json");
+        let totalJsonData = await totalData.json();
+        $("#timeLabel").html("数据更新至：" + totalJsonData.dataTime);
+        $("#totalLabel").html(totalJsonData.total);
+        $("#totalIncreaseYesterdayLabel").html("+" + totalJsonData.total_increase_yesterday);
+        $("#cureLabel").html(totalJsonData.cure);
+        $("#cureIncreaseYesterdayLabel").html("+" + totalJsonData.cure_increase_yesterday);
+        $("#deadLabel").html(totalJsonData.dead);
+        $("#deadIncreaseYesterdayLabel").html("+" + totalJsonData.dead_increase_yesterday);
+    }
 
     getData();
+    setTotalLabel();
 
     let legendHtml = "";
     for(let colorObj of colorRes){
@@ -447,19 +523,33 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
     document.querySelector("#showRadio").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(1);
-            layerFlag = true;
+            layerFlag_1 = true;
         }
     });
     document.querySelector("#showRadio2").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(0.5);
-            layerFlag = true;
+            layerFlag_1 = true;
         }
     });
     document.querySelector("#hideRadio").addEventListener("change", function(event) {
         if(event.currentTarget.checked == true){
             setThematicLayer(0);
-            layerFlag = false;
+            layerFlag_1 = false;
+        }
+    });
+    document.querySelector("#areaPointLayerCkb").addEventListener("change", function(event) {
+        if(event.currentTarget.checked == true){
+            setAreaPointLayer(1);
+            layerFlag_2 = true;
+            $("#timeSliderDiv").css("display", "block");
+        } else {
+            setAreaPointLayer(0);
+            layerFlag_2 = false;
+            if(timeSlider){
+                timeSlider.stop();
+            }
+            $("#timeSliderDiv").css("display", "none");
         }
     });
 

@@ -10,9 +10,30 @@
 	</head>
 	<body>
 		<div id="mapRoot"></div>
+		<div id="timeSliderDiv"></div>
 		<div class="sys-title-label">深圳市各区疫情分布情况一览</div>
+		<div class="lastdata-title-box">
+			<div id="timeLabel">数据更新至：-</div>
+			<div>
+				<div class="item-block">
+					<div id="totalLabel" class="bold-label total-label">-</div>
+					<div>确诊病例</div>
+					<div><span>昨日</span> <span id="totalIncreaseYesterdayLabel" class="bold-label total-label">-</span></div>
+				</div>
+				<div class="item-block">
+					<div id="cureLabel" class="bold-label cure-label">-</div>
+					<div>治愈病例</div>
+					<div><span>昨日</span> <span id="cureIncreaseYesterdayLabel" class="bold-label cure-label">-</span></div>
+				</div>
+				<div class="item-block">
+					<div id="deadLabel" class="bold-label dead-label">-</div>
+					<div>死亡病例</div>
+					<div><span>昨日</span> <span id="deadIncreaseYesterdayLabel" class="bold-label dead-label">-</span></div>
+				</div>
+			</div>
+		</div>
 		<div class="layer-control-box">
-			<div id="controlLabel">各区病例总计显示情况</div>
+			<div class="control-label">各区病例总计显示情况</div>
 			<div>
 				<input id="showRadio" name="layerType" type="radio" checked="checked"/>
 				<label for="showRadio">完全显示</label>
@@ -24,6 +45,10 @@
 			<div>
 				<input id="hideRadio" name="layerType" type="radio" />
 				<label for="hideRadio">隐藏</label>
+			</div>
+			<div>
+				<input id="areaPointLayerCkb" type="checkbox" />
+				<label for="areaPointLayerCkb">发病小区</label>
 			</div>
 		</div>
 		<div id="legendBox" class="lengnd-box"></div>

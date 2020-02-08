@@ -16,7 +16,7 @@ html, body{
 	bottom: 0;
 	margin: 0;
 	padding: 0;
-	border-right:1px solid rgba(0,0,0,0.5);
+	border-right:1px solid rgba(110,110,110,1);
 }
 
 .esri-view .esri-view-surface--inset-outline:focus::after{
@@ -53,15 +53,46 @@ html, body{
     color: #fff;
 }
 
+.lastdata-title-box{
+	position: absolute;
+    box-sizing: border-box;
+    background-color: rgba(110,110,110,0.4);
+    color: #fff;
+    top: 25px;
+    right: 21%;
+    border: 1px solid rgba(110,110,110,1);
+    padding: 10px 10px 5px 10px;
+    font-family: sans-serif;
+    font-size: 15px;
+}
+.lastdata-title-box .item-block{
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    padding: 5px 10px;
+}
+.lastdata-title-box .bold-label{
+	font-weight: bold;
+}
+.lastdata-title-box .total-label{
+	color: #e45511;
+}
+.lastdata-title-box .cure-label{
+	color: #55b11c;
+}
+.lastdata-title-box .dead-label{
+	color: #6e6e6e;
+}
+
 .lengnd-box{
 	position: absolute;
     box-sizing: border-box;
     bottom: 30px;
     left: 30px;
-    border: 1px solid rgba(0,0,0,0.5);
+    border: 1px solid rgba(110,110,110,1);
     padding: 5px 10px;
     /*background-color: #ffffff;*/
-    background-color: rgba(110,110,110,0.3);
+    background-color: rgba(110,110,110,0.4);
     color: #fff;
 }
 .lengnd-box div{
@@ -80,11 +111,11 @@ html, body{
 .layer-control-box{
 	position: absolute;
     box-sizing: border-box;
-    background-color: rgba(110,110,110,0.3);
+    background-color: rgba(110,110,110,0.4);
     color: #fff;
     top: 110px;
     left: 13px;
-    border: 1px solid rgba(0,0,0,0.5);
+    border: 1px solid rgba(110,110,110,1);
     padding: 5px 10px;
 }
 
@@ -98,7 +129,7 @@ html, body{
 .layer-control-box label{
 	font-size: 13px;
 }
-#controlLabel{
+.control-label{
 	text-indent: 5px;
 }
 
@@ -115,6 +146,18 @@ html, body{
 	font-family: sans-serif !important;
 }
 
+#timeSliderDiv{
+	position: absolute;
+	left: 200px;
+	bottom: 32px;
+}
+
+.esri-time-slider__slider{
+	padding: 0 25px;
+}
+.esri-time-slider__layout--compact .esri-time-slider__min, .esri-time-slider__layout--compact .esri-time-slider__max{
+	margin: 0 15px;
+}
 
 /*移动端*/
 .sys-title-label.mobile-set{
@@ -138,8 +181,23 @@ html, body{
     padding: 2px 5px;
 }
 .layer-control-box.mobile-set{
-	right: 5px;
+	right: 8px;
     left: auto;
-    bottom: 33%;
-    top: auto;
+    top: 48px;
+}
+.lastdata-title-box.mobile-set{
+	font-size: 12px;
+    top: 48px;
+    right: auto;
+    left: 55px;
+    padding: 5px 0px 0 5px;
+}
+#timeSliderDiv.mobile-set{
+	width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    right: 5px;
+    left: auto;
+    bottom: 4.5%;
+    font-size: 12px;
 }
