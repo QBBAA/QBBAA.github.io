@@ -91,3 +91,16 @@ html, body{
 .layer-control-box div, .layer-control-box label, .layer-control-box input{
 	cursor: pointer;
 }
+
+#popDiv .esri-popup__main-container{
+	width: auto !important;
+}
+#popDiv .esri-popup__header, #popDiv .esri-popup__footer{
+	display: none !important;
+}
+#popDiv .esri-popup__content{
+	margin: 5px 10px !important;
+	font-size: 14px !important;
+	font-weight: bold !important;
+	font-family: sans-serif !important;
+}

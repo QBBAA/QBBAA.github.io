@@ -1,6 +1,33 @@
-require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/layers/TileLayer"],
-function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
-    esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
+require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer"],
+function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer) {
+    // esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
+
+    let thematicLayer = null;
+    let highLightLayer = null;
+    let lastGra = null;
+    let myChart = null;
+    let responseJsonData = null;
+    let layerFlag = true;
+
+    const colorRes = [
+        {stop: 90, color: "#c11111"},
+        {stop: 80, color: "#c62e10"},
+        {stop: 70, color: "#cb4110"},
+        {stop: 60, color: "#d05112"},
+        {stop: 50, color: "#d46016"},
+        {stop: 40, color: "#d86e1b"},
+        {stop: 30, color: "#dc7c21"},
+        {stop: 20, color: "#df8929"},
+        {stop: 10, color: "#e39532"},
+        {stop: 1, color: "#e6a23c"},
+    ];
+
+    const dictionary = {
+        "esriFieldTypeOID": "oid",
+        "esriFieldTypeInteger": "integer",
+        "esriFieldTypeString": "string",
+        "esriFieldTypeDouble": "double",
+    };
 
     // 创建地图对象
     const map = new Map();
@@ -15,13 +42,7 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
     const view = new MapView({
         container: "mapRoot",
         map: map,
-        // center: [114.18490085425961,22.638460024481233],
-        // zoom: 6,
         extent: {
-            // xmin: 113.4298752567363,
-            // ymin: 22.25574401708528,
-            // xmax: 114.96682303795404,
-            // ymax: 23.031422350418612
             xmin: 12647270.700061997,
             ymin: 2546232.0677209855,
             xmax: 12764601.538479583,
@@ -30,10 +51,96 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
         },
         spatialReference: {
             wkid: 3857
+        },
+        popup: {
+            container: document.querySelector("#popDiv")
         }
     });
 
-    let thematicLayer;
+    view.on("pointer-move", pickAreaOnMap);
+
+    
+
+    function pickAreaOnMap(event){
+        view.hitTest(event).then(res => {
+            if(res.results.length == 0){
+                view.popup.close();
+            } else {
+                for(let i = 0; i < res.results.length; i++){
+                    let result = res.results[i];
+                    let geo = result.graphic.geometry;
+                    if(geo.type == "point"){
+                        // debugger
+                        view.popup.open({
+                            content: `
+                                <div>
+                                    <div>小区名称：${result.graphic.attributes["小区名称"]}</div>
+                                    <div>小区地址：${result.graphic.attributes["地址"]}</div>
+                                    <div>所属区域：${result.graphic.attributes["行政区"]}</div>
+                                </div>
+                            `,
+                            location: result.mapPoint,
+                        });
+                        break;
+                    } else if(geo.type == "polygon" && layerFlag == true){
+                        let areaName = result.graphic.attributes["Name_CHN"];
+                        let targetDataItem = responseJsonData.find(dataItem => {
+                            return dataItem.name == areaName;
+                        });
+                        view.popup.open({
+                            content: `<div>${areaName}：${targetDataItem.value}例</div>`,
+                            location: result.mapPoint,
+                        });
+                        break;
+                    }
+                }
+            }
+        });
+    };  
+
+    function highLightGra(name){
+        let target = null;
+        for(let gra of thematicLayer.graphic){
+            if(gra.attributes["Name_CHN"] == name){
+                target = new Graphic({
+                    attributes: gra.attributes,
+                    geometry: gra.geometry,
+                    symbol: {
+                        type: "simple-fill",
+                        color: "#ffd400",
+                        outline: {
+                            color: [0, 0, 0, 0.3],
+                            width: 0.5
+                        }
+                    }
+                });
+                break;
+            }
+        }
+        if(target){
+            highLightLayer.removeAll();
+            highLightLayer.add(target);
+        }
+    }
+
+    function highLightChartSeries(name){
+        if(myChart){
+            // myChart.dispatchAction({
+            //     type: 'highlight',
+            //     name: name
+            // });
+            // myChart.dispatchAction({
+            //     type: 'showTip',
+            //     name: name
+            // });
+            myChart.dispatchAction({
+                type: 'showTip',
+                name: name,
+                dataIndex: 0
+            });
+        }
+    }
+
 
     // 添加地图点击监听，捕获测试点
     // view.on("click", event => {
@@ -46,45 +153,39 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
 
     // let colorRes = chroma.scale(['#e6a23c','#c11111']).mode('lch').colors(10);
     // debugger
-    const colorRes = [
-        // {stop: 9, color: "#ef96c5"},
-        // {stop: 7, color: "#cabffc"},
-        // {stop: 4, color: "#b2e2ff"},
-        // {stop: 1, color: "#ccfbff"}
+    
+    function getColor(value) {
+        let color = "#7c7c7c";
 
-        // {stop: 0, color: "#ccfbff"},
-        {stop: 90, color: "#c11111"},
-        {stop: 80, color: "#c62e10"},
-        {stop: 70, color: "#cb4110"},
-        {stop: 60, color: "#d05112"},
-        {stop: 50, color: "#d46016"},
-        {stop: 40, color: "#d86e1b"},
-        {stop: 30, color: "#dc7c21"},
-        {stop: 20, color: "#df8929"},
-        {stop: 10, color: "#e39532"},
-        {stop: 1, color: "#e6a23c"},
-    ];
+        for(let colorObj of colorRes){
+            if(value >= colorObj.stop){
+                color = colorObj.color;
+                break;
+            }
+        }
+        return color;
+    };
 
-    let getData = async () => {
+    // let getData = async () => {
+    async function getData() {
         let responseData = await fetch("./json/data.json");
-        let responseJsonData = await responseData.json();
+        responseJsonData = await responseData.json();
         responseJsonData = responseJsonData.data;
+        responseJsonData = responseJsonData.sort((a, b) => {
+            return a.value - b.value;
+        });
+
+        let staticsData = {};
+        const uniqueValueInfos = [];
 
         let yAxisData = [];
+        let legendData = [];
         let seriesData = [];
 
-        const uniqueValueInfos = [];
         const totalLength = responseJsonData.length;
         for(let i in responseJsonData){
             let dataItem = responseJsonData[i];
-            let color = "#7c7c7c";
-
-            for(let colorObj of colorRes){
-                if(dataItem.value >= colorObj.stop){
-                    color = colorObj.color;
-                    break;
-                }
-            }
+            let color = getColor(dataItem.value);
 
             uniqueValueInfos.push({
                 value: dataItem.adcode,
@@ -98,7 +199,7 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
                 }
             });
 
-            yAxisData.push(dataItem.name);
+            legendData.push(dataItem.name);
             let dataAC = Array.from({length: totalLength}, x => 0);
             dataAC[i] = dataItem.value;
             seriesData.push({
@@ -122,9 +223,11 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
                 }
             });
         }
+        // yAxisData = legendData.concat().reverse();
+        yAxisData = legendData.concat();
 
         let listDom = document.querySelector("#chartRoot");
-        let myChart = echarts.init(listDom);
+        myChart = echarts.init(listDom);
         let option = {
             title: {
                 text: "深圳市各区疫情统计图",
@@ -135,7 +238,7 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
                 }
             },
             legend: {
-                data: yAxisData,
+                data: legendData,
                 top: 50,
                 textStyle: {
                     color: "#fff"
@@ -173,94 +276,88 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
         };
         myChart.setOption(option, true);
 
-        // const baseLayerRenderer = {
-        //     type: "unique-value",  // autocasts as new UniqueValueRenderer()
-        //     field: "adcode",
-        //     uniqueValueInfos
-        // };
+        let areaData = await fetch("./json/area_shenzhen.json");
+        let areaJsonData = await areaData.json();
+        let areaGras = areaJsonData.features.map(dataItem => {
+            let gra = Graphic.fromJSON(dataItem);
+            gra.geometry.spatialReference = {wkid: 3857};
+            return gra;
+        })
+        let fields = areaJsonData.fields.map(fieldObj => {
+            if(dictionary.hasOwnProperty(fieldObj.type)){
+                return {
+                    name: fieldObj.name,
+                    alias: fieldObj.alias,
+                    type: dictionary[fieldObj.type]
+                };
+            } else {
+                return {
+                    name: fieldObj.name,
+                    alias: fieldObj.alias,
+                    type: fieldObj.type
+                };
+            }
+        })
 
-        thematicLayer = new GraphicsLayer();
-        thematicLayer.add();
+        thematicLayer = new FeatureLayer({
+            geometryType: "polygon",
+            objectIdField: "FID",
+            outFields: ["*"],
+            fields: fields,
+            spatialReference: {wkid: 3857},
+            source: areaGras,
+            renderer: {
+                type: "unique-value",  // autocasts as new UniqueValueRenderer()
+                field: "Code",
+                uniqueValueInfos
+            },
+            labelingInfo: [
+                {
+                    labelExpressionInfo: { expression: "$feature.Name_CHN" },
+                    symbol: {
+                        type: "text",  // autocasts as new TextSymbol()
+                        color: "black",
+                        haloSize: 1,
+                        haloColor: "white"
+                    }
+                }
+            ]
+        });
         map.add(thematicLayer);
 
-        // const areaPointLayer = new GeoJSONLayer({
-        //     url: "./geojson/小区点数据.json",
-        //     renderer: {
-        //         type: "simple",  // autocasts as new SimpleRenderer()
-        //         symbol: {
-        //             type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-        //               style: "square",
-        //               color: "blue",
-        //               size: "8px",  // pixels
-        //               outline: {  // autocasts as new SimpleLineSymbol()
-        //                 color: [ 255, 255, 0 ],
-        //                 width: 3  // points
-        //               }
-        //         }
-        //     },
-        //     spatialReference: {wkid: 3857}
-        // });
-        // map.add(areaPointLayer);
+        highLightLayer = new GraphicsLayer();
+        map.add(highLightLayer);
 
         // 获取小区点数据
-        let areaPointData = await fetch("./json/小区点数据.json");
+        let areaPointData = await fetch("./json/village.json");
         let areaPointJsonData = await areaPointData.json();
-        areaPointJsonData = responseJsonData.data;
+        areaPointJsonData = areaPointJsonData.features;
         const areaPointLayer = new GraphicsLayer();
         map.add(areaPointLayer);
         areaPointLayer.addMany(areaPointJsonData.map(dataItem => {
             let gra = Graphic.fromJSON(dataItem);
+            gra.geometry.spatialReference = {wkid: 3857};
             gra.symbol = {
                 type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-                style: "square",
+                style: "circle",
                 color: "blue",
-                size: "8px",  // pixels
+                size: "15px",  // pixels
                 outline: {  // autocasts as new SimpleLineSymbol()
                     color: [ 255, 255, 0 ],
-                    width: 3  // points
+                    width: 2  // points
                 }
             };
             return gra;
-        }));
-        
+        }));        
     };
 
-    // let addLabel = async () => {
-    //     let responseData = await fetch("./geojson/shenzhen.json");
-    //     let responseJsonData = await responseData.json();
-    //     responseJsonData = responseJsonData.features;
-
-        
-    //     let graphics = [];
-    //     for(let dataItem of responseJsonData){
-    //         graphics.push({
-    //             geometry: {
-    //                 type: "point",  // autocasts as new Point()
-    //                 longitude: dataItem.properties.center[0],
-    //                 latitude: dataItem.properties.center[1]
-    //             },
-    //             symbol: {
-    //                 type: "text",
-    //                 text: dataItem.properties.name
-    //             }
-    //         });
-    //     }
-
-    //     const labelLayer = new GraphicsLayer({
-    //         graphics: graphics
-    //     });
-    //     map.add(labelLayer);
-    // };
-
-    let setThematicLayer = opacity => {
+    function setThematicLayer(opacity) {
         if(thematicLayer){
             thematicLayer.opacity = opacity;
         }
     }
 
     getData();
-    // addLabel();
-
 
     let legendHtml = "";
     for(let colorObj of colorRes){
@@ -272,16 +369,23 @@ function(esriConfig, Map, MapView, GeoJSONLayer, GraphicsLayer, TileLayer) {
     document.querySelector("#showRadio").addEventListener("change", event => {
         if(event.currentTarget.checked == true){
             setThematicLayer(1);
+            layerFlag = true;
         }
     });
-    document.querySelector("#showRadio").addEventListener("change", event => {
+    document.querySelector("#showRadio2").addEventListener("change", event => {
         if(event.currentTarget.checked == true){
             setThematicLayer(0.5);
+            layerFlag = true;
         }
     });
-    document.querySelector("#showRadio").addEventListener("change", event => {
+    document.querySelector("#hideRadio").addEventListener("change", event => {
         if(event.currentTarget.checked == true){
             setThematicLayer(0);
+            layerFlag = false;
         }
     });
+
+    // setTimeout(() => {
+    //     highLightChartSeries("光明区");
+    // }, 5000);
 });
