@@ -28,7 +28,7 @@ if(!isPc){
 require(["esri/config", "esri/Map", "esri/Graphic", "esri/views/MapView", "esri/layers/GeoJSONLayer", 
     "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/layers/TileLayer", "esri/widgets/TimeSlider"],
 function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, FeatureLayer, TileLayer, TimeSlider) {
-    // esriConfig.fontsUrl = "/arcgis_js_api/library/4.14/esri/themes/base/fonts";
+    // esriConfig.fontsUrl = "./lib/arcgis_js_api/library/4.14/esri/themes/base/fonts";
     const wkid = 3857;
 
     let thematicLayer = null;
@@ -122,7 +122,7 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
         // mode: "time-window",
         mode: "cumulative-from-start",
         fullTimeExtent: { // entire extent of the timeSlider
-            start: new Date(2020, 0, 1),
+            start: new Date(2020, 0, 30),
             end: new Date()
         },
         values:[ // location of timeSlider thumbs
@@ -506,17 +506,17 @@ function(esriConfig, Map, Graphic, MapView, GeoJSONLayer, GraphicsLayer, Feature
                 field: "Code",
                 uniqueValueInfos
             },
-            // labelingInfo: [
-            //     {
-            //         labelExpressionInfo: { expression: "$feature.Name_CHN" },
-            //         symbol: {
-            //             type: "text",  // autocasts as new TextSymbol()
-            //             color: "black",
-            //             haloSize: 1,
-            //             haloColor: "white"
-            //         }
-            //     }
-            // ]
+            labelingInfo: [
+                {
+                    labelExpressionInfo: { expression: "$feature.Name_CHN" },
+                    symbol: {
+                        type: "text",  // autocasts as new TextSymbol()
+                        color: "black",
+                        haloSize: 1,
+                        haloColor: "white"
+                    }
+                }
+            ]
         });
         map.add(thematicLayer);
 

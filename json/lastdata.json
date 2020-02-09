@@ -1,9 +1,9 @@
 {
-	"dataTime": "2020-02-08 19:22",
-	"total": 1095,
-	"total_increase_yesterday": 57,
-	"cure": 109,
-	"cure_increase_yesterday": 29,
-	"dead": 1,
+	"dataTime": "2020-02-08 12:00",
+	"total": 354,
+	"total_increase_yesterday": 3,
+	"cure": 39,
+	"cure_increase_yesterday": 8,
+	"dead": 0,
 	"dead_increase_yesterday": 0
 }
